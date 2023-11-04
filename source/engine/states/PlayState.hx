@@ -221,9 +221,9 @@ class PlayState extends MusicBeatState
 
 		scoreText = new FlxText(-10, 0, FlxG.width, 'Score: 0000000');
 		scoreText.camera = camHUD;
-		scoreText.y = (ClientPrefs.downScroll ? 30 : FlxG.height - scoreText.height - 30);
 		scoreText.setFormat(Paths.font('arirang'), 64, 0xff46495b, CENTER, OUTLINE, 0xff17181e);
 		scoreText.borderSize = 2;
+		scoreText.y = (ClientPrefs.downScroll ? 30 : FlxG.height - scoreText.height - 30);
 		add(scoreText);
 	}
 
