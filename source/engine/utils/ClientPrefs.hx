@@ -59,8 +59,8 @@ class ClientPrefs
 		// _conn.data.ACCEPT = null;
 		// _conn.data.BACK = null;
 		// _conn.data.PAUSE = null;
-		_conn.data.played = false;
-		_conn.data.maxScore = 0.0;
+		// _conn.data.played = false;
+		// _conn.data.maxScore = 0.0;
 		#end
 
 		if (frameRate > FlxG.drawFramerate)
