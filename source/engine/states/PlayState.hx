@@ -305,6 +305,9 @@ class PlayState extends MusicBeatState
 
 	public function reStart():Void
 	{
+		inst.fadeOut(0.45);
+		voiceOpponent.fadeOut(0.45);
+		voicePlayer.fadeOut(0.45);
 		MusicBeatState.switchState(Type.createInstance(Type.getClass(this), []));
 	}
 

@@ -95,7 +95,7 @@ class PauseSubState extends MusicBeatSubState
 					case 0:
 						resume();
 					case 1:
-						switchState(Type.createInstance(Type.getClass(playState), []));
+						playState.reStart();
 					case 2:
 						openSubState(new OptionSubState(null));
 					case 3:
