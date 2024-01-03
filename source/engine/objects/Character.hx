@@ -1,11 +1,14 @@
 package engine.objects;
 
-import engine.objects.music.MusicSprite;
+import engine.states.PlayState;
 import engine.utils.Paths;
+import flixel.FlxSprite;
 import flixel.animation.FlxAnimation;
 
-class Character extends MusicSprite
+class Character extends FlxSprite implements IPlayable
 {
+	public var playState:PlayState;
+
 	public var character:String;
 
 	public var arrowAnimations:Array<String> = ['left', 'down', 'up', 'right'];
@@ -34,10 +37,17 @@ class Character extends MusicSprite
 		}
 	}
 
-	override function onBeatHit(beat:Int):Void
+	override function update(elapsed:Float):Void
 	{
-		super.onBeatHit(beat);
+		super.update(elapsed);
+		if (playState.isBeatHit)
+		{
+			onBeatHit(playState.curBeat);
+		}
+	}
 
+	public function onBeatHit(beat:Int):Void
+	{
 		if (beat % 2 == 0)
 		{
 			var curAnim:FlxAnimation = animation.curAnim;

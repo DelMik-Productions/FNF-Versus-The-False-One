@@ -15,10 +15,6 @@ import engine.objects.Note;
 import engine.objects.NoteSplash;
 import engine.objects.Receptor;
 import engine.objects.StrumNote;
-import engine.objects.music.MusicGroup;
-import engine.objects.music.MusicObject;
-import engine.objects.music.MusicSprite;
-import engine.objects.music.MusicSpriteGroup;
 import engine.songs.NoteRenderer;
 import engine.states.MusicBeatState;
 import engine.states.PlayState;
@@ -79,7 +75,7 @@ class ImportAll
 	}
 }
 #else
-public class ImportAll
+class ImportAll
 {
 }
 #end

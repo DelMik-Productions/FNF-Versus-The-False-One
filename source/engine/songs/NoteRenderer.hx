@@ -3,7 +3,6 @@ package engine.songs;
 import engine.effects.ColorMaskEffect;
 import engine.objects.Note;
 import engine.objects.StrumNote;
-import engine.objects.music.MusicSpriteGroup;
 import engine.states.PlayState;
 import engine.utils.ClientPrefs;
 import engine.utils.MathUtil;
@@ -16,14 +15,16 @@ import flixel.util.FlxColor;
 import flixel.util.FlxSignal.FlxTypedSignal;
 import flixel.util.FlxSort;
 
-typedef StrumNoteSpriteGroup = MusicTypedSpriteGroup<StrumNote>;
-typedef NoteSpriteGroup = MusicTypedSpriteGroup<Note>;
+typedef StrumNoteSpriteGroup = FlxTypedSpriteGroup<StrumNote>;
+typedef NoteSpriteGroup = FlxTypedSpriteGroup<Note>;
 typedef IndexSignal = FlxTypedSignal<Int->Void>;
 
-class NoteRenderer extends MusicSpriteGroup
+class NoteRenderer extends FlxSpriteGroup implements IPlayable
 {
 	public static inline var safeZoneOffset:Float = 160.0;
 	public static inline var strumOffset:Float = 144.0 / 2.0;
+
+	public var playState:PlayState;
 
 	public var notes:Array<NoteData> = [];
 	public var strumLine(get, never):Float;
@@ -56,6 +57,7 @@ class NoteRenderer extends MusicSpriteGroup
 	private var lastNoteIndex:Int = 0;
 
 	private var lastCalculatedNotePosition:Float = 0.0;
+	private var songPosition:Float = 0.0;
 
 	#if FLX_DEBUG
 	private var calcNote:Int = 0;
@@ -114,10 +116,27 @@ class NoteRenderer extends MusicSpriteGroup
 		return strums;
 	}
 
-	override function onUpdate(songPosition:Float):Void
+	override function update(elapsed:Float):Void
 	{
-		super.onUpdate(songPosition);
+		super.update(elapsed);
 
+		opponentStrums.y = strumLine;
+		playerStrums.y = strumLine;
+
+		onUpdate(this.songPosition = playState.songPosition);
+
+		if (playState.isKeyDown)
+		{
+			onKeyDown(playState.isKeyDownValue);
+		}
+		if (playState.isKeyUp)
+		{
+			onKeyUp(playState.isKeyUpValue);
+		}
+	}
+
+	public function onUpdate(songPosition:Float):Void
+	{
 		updateNotes();
 		for (strumNote in opponentStrums)
 		{
@@ -297,15 +316,7 @@ class NoteRenderer extends MusicSpriteGroup
 		return group.add(noteFactory());
 	}
 
-	override function onPrefsChanged():Void
-	{
-		opponentStrums.y = strumLine;
-		playerStrums.y = strumLine;
-
-		updateNotes();
-	}
-
-	override function onKeyDown(i:Int):Void
+	public function onKeyDown(i:Int):Void
 	{
 		playerStrums.members[i].playAnim('pressed', true);
 
@@ -335,7 +346,7 @@ class NoteRenderer extends MusicSpriteGroup
 		}
 	}
 
-	override function onKeyUp(i:Int):Void
+	public function onKeyUp(i:Int):Void
 	{
 		playerStrums.members[i].playAnim('arrow', true);
 		pressedIndex[i] = false;

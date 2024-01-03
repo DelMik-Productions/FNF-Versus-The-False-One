@@ -2,14 +2,18 @@ package engine.objects;
 
 import engine.objects.Receptor.NoteSpriteGroup;
 import engine.objects.Receptor.StrumNoteSpriteGroup;
+import engine.states.PlayState.IPlayable;
 import engine.states.PlayState.NoteData;
+import engine.states.PlayState;
 import engine.utils.ClientPrefs;
 import engine.utils.MathUtil;
 import flixel.FlxG;
 import flixel.math.FlxRect;
 
-class StrumLine extends NoteSpriteGroup
+class StrumLine extends NoteSpriteGroup implements IPlayable
 {
+	public var playState:PlayState;
+
 	public var index:Int;
 	public var receptor:Receptor;
 	public var strumNote:StrumNote;
@@ -20,6 +24,8 @@ class StrumLine extends NoteSpriteGroup
 	private var lastNoteIndex:Int = 0;
 	private var calculatedSongPosition:Float = 0.0;
 
+	private var songPosition:Float = 0.0;
+
 	public function new(index:Int, receptor:Receptor)
 	{
 		super();
@@ -27,10 +33,22 @@ class StrumLine extends NoteSpriteGroup
 		this.receptor = receptor;
 	}
 
-	override function onUpdate(songPosition:Float):Void
+	override function update(elapsed:Float):Void
 	{
-		super.onUpdate(songPosition);
+		super.update(elapsed);
+
+		this.songPosition = playState.songPosition;
+
 		updateStrum();
+
+		if (playState.isKeyDown)
+		{
+			onKeyDown(playState.isKeyDownValue);
+		}
+		if (playState.isKeyUp)
+		{
+			onKeyUp(playState.isKeyUpValue);
+		}
 	}
 
 	public function updateStrum():Void
@@ -159,7 +177,7 @@ class StrumLine extends NoteSpriteGroup
 			activatedNote.alpha = 1.0;
 	}
 
-	override function onKeyDown(i:Int):Void
+	public function onKeyDown(i:Int):Void
 	{
 		pressed = true;
 		strumNote.playAnim('arrow', true);
@@ -186,7 +204,7 @@ class StrumLine extends NoteSpriteGroup
 		}
 	}
 
-	override function onKeyUp(i:Int):Void
+	public function onKeyUp(i:Int):Void
 	{
 		pressed = false;
 		strumNote.playAnim('arrow', true);

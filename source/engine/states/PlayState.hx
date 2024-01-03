@@ -2,8 +2,6 @@ package engine.states;
 
 import engine.effects.AlphaEffect;
 import engine.objects.Character;
-import engine.objects.music.MusicObject;
-import engine.objects.music.MusicSprite;
 import engine.songs.Calculator;
 import engine.songs.NoteRenderer;
 import engine.substates.GameOverSubState;
@@ -89,6 +87,15 @@ class PlayState extends MusicBeatState
 	public var crochet(default, null):Float; // beats in milliseconds
 	public var stepCrochet(default, null):Float; // steps in milliseconds
 
+	public var isBeatHit:Bool = false;
+	public var isStepHit:Bool = false;
+
+	public var isKeyDown:Bool = false;
+	public var isKeyUp:Bool = false;
+
+	public var isKeyDownValue:Int = -1;
+	public var isKeyUpValue:Int = -1;
+
 	public var calculator:Calculator = new Calculator();
 
 	private var oldBeat:Int = -1;
@@ -126,6 +133,8 @@ class PlayState extends MusicBeatState
 		}
 
 		super.init();
+
+		memberAdded.add(onAdd);
 
 		camUI = new FlxCamera(0, 0, cameraSize, cameraSize);
 		camUI.bgColor = 0;
@@ -331,10 +340,12 @@ class PlayState extends MusicBeatState
 
 	override function update(elapsed:Float):Void
 	{
-		super.update(elapsed);
 		updateSongPosition();
+		super.update(elapsed);
+		updateTick();
 		updateCameraZoom(elapsed);
 		updateCameraFollow(elapsed);
+		updateEvents();
 
 		if (controls.PAUSE)
 		{
@@ -380,9 +391,6 @@ class PlayState extends MusicBeatState
 				stepHit();
 			}
 
-			forEachPlayable(o -> o.onUpdate(songPosition));
-			updateTick();
-
 			if (songPosition >= songLength && lerpScore >= scoreFloat)
 			{
 				songEnd();
@@ -401,6 +409,9 @@ class PlayState extends MusicBeatState
 
 	public function updateTick():Void
 	{
+		if (songPosition < 0.0)
+			return;
+
 		tick++;
 
 		if (scoreFloat > lerpScore)
@@ -457,8 +468,6 @@ class PlayState extends MusicBeatState
 
 		var uiAlpha:Float = (fakeHealth >= 1.0 ? 0.0 : 1.0);
 		uiAlphaEffect.alpha = FlxMath.lerp(uiAlpha, uiAlphaEffect.alpha, lerpVal);
-
-		forEachPlayable(o -> o.onTick(tick));
 	}
 
 	public function updateCameraFollow(elapsed:Float):Void
@@ -479,6 +488,18 @@ class PlayState extends MusicBeatState
 		camUI.zoom = camHUD.zoom;
 	}
 
+	public function updateEvents():Void
+	{
+		isBeatHit = false;
+		isStepHit = false;
+
+		isKeyDown = false;
+		isKeyUp = false;
+
+		isKeyDownValue = -1;
+		isKeyUpValue = -1;
+	}
+
 	public function songEnd():Void
 	{
 		ClientPrefs.played = true;
@@ -494,12 +515,12 @@ class PlayState extends MusicBeatState
 
 	public function beatHit():Void
 	{
-		forEachPlayable(o -> o.onBeatHit(oldBeat));
+		isBeatHit = true;
 	}
 
 	public function stepHit():Void
 	{
-		forEachPlayable(o -> o.onStepHit(oldStep));
+		isStepHit = true;
 	}
 
 	public function setCamFollow(?x:Float, ?y:Float, fix:Bool = false):Void
@@ -557,8 +578,6 @@ class PlayState extends MusicBeatState
 		voiceOpponent.time = songPosition;
 		voicePlayer.time = songPosition;
 		openMusicSubState(new PauseSubState(this, songPosition));
-
-		forEachPlayable(o -> o.onPause());
 	}
 
 	public function resume():Void
@@ -574,8 +593,6 @@ class PlayState extends MusicBeatState
 			if (pressed[i] < 0 || absolutePressed[i] < 0 || pressed[i] != absolutePressed[i])
 				keyUp(i);
 		}
-
-		forEachPlayable(o -> o.onResume());
 	}
 
 	public function keyDown(i:Int, ?keyCode:Int):Bool
@@ -587,7 +604,8 @@ class PlayState extends MusicBeatState
 			keyCode = keys[i * 2];
 		pressed[i] = keyCode;
 
-		forEachPlayable(o -> o.onKeyDown(i));
+		isKeyDown = true;
+		isKeyDownValue = i;
 
 		return true;
 	}
@@ -598,7 +616,8 @@ class PlayState extends MusicBeatState
 			return false;
 		pressed[i] = -1;
 
-		forEachPlayable(o -> o.onKeyUp(i));
+		isKeyUp = true;
+		isKeyUpValue = i;
 
 		return true;
 	}
@@ -610,32 +629,19 @@ class PlayState extends MusicBeatState
 		opponentIcon.y = healthBar.y + (healthBar.height - opponentIcon.height) * 0.5;
 		playerIcon.y = healthBar.y + (healthBar.height - playerIcon.height) * 0.5;
 		registerControls();
-
-		forEachPlayable(o -> o.onPrefsChanged());
 	}
 
 	@:access(engine.utils.ClientPrefs)
 	private function registerControls():Void
 	{
-		keys.push(ClientPrefs.NOTE_LEFT[0]);
-		keys.push(ClientPrefs.NOTE_LEFT[1]);
-		keys.push(ClientPrefs.NOTE_DOWN[0]);
-		keys.push(ClientPrefs.NOTE_DOWN[1]);
-		keys.push(ClientPrefs.NOTE_UP[0]);
-		keys.push(ClientPrefs.NOTE_UP[1]);
-		keys.push(ClientPrefs.NOTE_RIGHT[0]);
-		keys.push(ClientPrefs.NOTE_RIGHT[1]);
-	}
-
-	public function forEachPlayable(func:IPlayable->Void):Void
-	{
-		forEach(o ->
-		{
-			if (o is MusicObject)
-				func(cast(o, MusicObject));
-			if (o is MusicSprite)
-				func(cast(o, MusicSprite));
-		});
+		keys[0] = ClientPrefs.NOTE_LEFT[0];
+		keys[1] = ClientPrefs.NOTE_LEFT[1];
+		keys[2] = ClientPrefs.NOTE_DOWN[0];
+		keys[3] = ClientPrefs.NOTE_DOWN[1];
+		keys[4] = ClientPrefs.NOTE_UP[0];
+		keys[5] = ClientPrefs.NOTE_UP[1];
+		keys[6] = ClientPrefs.NOTE_RIGHT[0];
+		keys[7] = ClientPrefs.NOTE_RIGHT[1];
 	}
 
 	private function onKeyDown(e:KeyboardEvent):Void
@@ -683,13 +689,13 @@ class PlayState extends MusicBeatState
 		return CoolUtil.getSystemMilliseconds() - startedSongPosition;
 	}
 
-	override function add(basic:FlxBasic):FlxBasic
+	public function onAdd(basic:FlxBasic):Void
 	{
-		if (basic is MusicObject)
-			cast(basic, MusicObject).playState = this;
-		if (basic is MusicSprite)
-			cast(basic, MusicSprite).playState = this;
-		return super.add(basic);
+		if (basic is IPlayable)
+		{
+			var v:IPlayable = cast(basic, IPlayable);
+			v.playState = this;
+		}
 	}
 
 	override function destroy():Void
@@ -704,19 +710,4 @@ class PlayState extends MusicBeatState
 interface IPlayable
 {
 	public var playState:PlayState;
-
-	public var songPosition:Float;
-	public var tick:Int;
-	public var curBeat:Int;
-	public var curStep:Int;
-
-	public function onUpdate(songPosition:Float):Void;
-	public function onTick(tick:Int):Void;
-	public function onBeatHit(beat:Int):Void;
-	public function onStepHit(step:Int):Void;
-	public function onPause():Void;
-	public function onResume():Void;
-	public function onPrefsChanged():Void;
-	public function onKeyDown(i:Int):Void;
-	public function onKeyUp(i:Int):Void;
 }

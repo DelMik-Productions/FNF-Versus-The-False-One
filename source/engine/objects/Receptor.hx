@@ -1,24 +1,25 @@
 package engine.objects;
 
-import engine.objects.music.MusicGroup;
-import engine.objects.music.MusicObject;
-import engine.objects.music.MusicSpriteGroup.MusicTypedSpriteGroup;
 import engine.states.PlayState;
 import engine.utils.ClientPrefs;
+import flixel.FlxBasic;
 import flixel.FlxG;
 import flixel.group.FlxGroup;
+import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 import flixel.math.FlxMath;
 import flixel.util.FlxSignal.FlxTypedSignal;
 import flixel.util.FlxSort;
 
-typedef StrumNoteSpriteGroup = MusicTypedSpriteGroup<StrumNote>;
-typedef NoteSpriteGroup = MusicTypedSpriteGroup<Note>;
+typedef StrumNoteSpriteGroup = FlxTypedSpriteGroup<StrumNote>;
+typedef NoteSpriteGroup = FlxTypedSpriteGroup<Note>;
 typedef IndexSignal = FlxTypedSignal<Int->Void>;
 
-class Receptor extends MusicGroup
+class Receptor extends FlxGroup implements IPlayable
 {
 	public static inline var safeZoneOffset:Float = 160.0;
 	public static inline var strumOffset:Float = 144.0 / 2.0;
+
+	public var playState:PlayState;
 
 	public var notes:Array<NoteData> = [];
 	public var notesCount:Int = 0;
@@ -107,15 +108,23 @@ class Receptor extends MusicGroup
 		return strums;
 	}
 
-	override function onPrefsChanged():Void
+	override function update(elapsed:Float):Void
 	{
-		opponentStrums.y = strumLine;
-		playerStrums.y = strumLine;
+		super.update(elapsed);
 
 		updateStrums();
+
+		if (playState.isKeyDown)
+		{
+			onKeyDown(playState.isKeyDownValue);
+		}
+		if (playState.isKeyUp)
+		{
+			onKeyUp(playState.isKeyUpValue);
+		}
 	}
 
-	override function onKeyDown(i:Int):Void
+	public function onKeyDown(i:Int):Void
 	{
 		// Exception of PauseSubState
 		if (playState.paused)
@@ -124,13 +133,16 @@ class Receptor extends MusicGroup
 		strumLines[4 + i].onKeyDown(i);
 	}
 
-	override function onKeyUp(i:Int):Void
+	public function onKeyUp(i:Int):Void
 	{
 		strumLines[4 + i].onKeyUp(i);
 	}
 
 	public function updateStrums():Void
 	{
+		opponentStrums.y = strumLine;
+		playerStrums.y = strumLine;
+
 		for (strumLine in strumLines)
 		{
 			strumLine.updateStrum();

@@ -1,14 +1,13 @@
 package engine.objects;
 
 import engine.effects.ColorMaskEffect;
-import engine.objects.music.MusicSprite;
 import engine.utils.Paths;
 import flixel.FlxSprite;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.math.FlxRect;
 import flixel.util.FlxColor;
 
-class Note extends MusicSprite
+class Note extends FlxSprite
 {
 	public static inline var swagWidth:Float = 168.0;
 	public static inline var swagHeight:Float = 164.0;

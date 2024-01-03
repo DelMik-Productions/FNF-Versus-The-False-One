@@ -1,30 +1,19 @@
 package engine.states;
 
 #if debug
-import engine.objects.music.MusicObject;
 import engine.songs.Calculator;
 import engine.songs.NoteRenderer;
 import engine.states.PlayState;
-import engine.timeline.BezierEasing;
-import engine.timeline.Keyframe;
-import engine.timeline.StringTimeline;
-import engine.timeline.Timeline;
 import engine.ui.Dragger;
 import engine.ui.Slider;
-import engine.ui.TimelineRenderer;
 import engine.utils.CoolUtil;
 import engine.utils.MathUtil;
 import flixel.FlxBasic;
 import flixel.FlxG;
-import flixel.FlxSprite;
 import flixel.animation.FlxAnimation;
-import flixel.math.FlxAngle;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
-import haxe.DynamicAccess;
-import haxe.Serializer;
-import sys.io.File;
 
 @:access(engine.states.PlayState)
 class PlayStateEditor extends MusicBeatState
@@ -263,7 +252,6 @@ class PlayStateEditor extends MusicBeatState
 				}
 			}
 
-			playState.forEachPlayable(o -> o.onUpdate(playState.songPosition));
 			playState.updateTick();
 		}
 
